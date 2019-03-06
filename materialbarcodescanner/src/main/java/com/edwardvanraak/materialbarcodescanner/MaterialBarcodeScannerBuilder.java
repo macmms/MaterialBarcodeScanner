@@ -228,7 +228,7 @@ public class MaterialBarcodeScannerBuilder {
      * Build a barcode scanner using the Mobile Vision Barcode API
      */
     private void buildMobileVisionBarcodeDetector() {
-        String focusMode = Camera.Parameters.FOCUS_MODE_FIXED;
+        String focusMode = Camera.Parameters.FOCUS_MODE_AUTO;
         if(mAutoFocusEnabled){
             focusMode = Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE;
         }
