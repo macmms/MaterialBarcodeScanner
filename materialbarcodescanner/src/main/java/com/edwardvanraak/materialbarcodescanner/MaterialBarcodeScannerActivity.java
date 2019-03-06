@@ -48,6 +48,8 @@ public class MaterialBarcodeScannerActivity extends AppCompatActivity {
 
     private boolean mFlashOn = false;
 
+    private LinearLayout flashOnButton;
+
     @Override
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
@@ -99,7 +101,7 @@ public class MaterialBarcodeScannerActivity extends AppCompatActivity {
     }
 
     private void setupButtons() {
-        final LinearLayout flashOnButton = (LinearLayout)findViewById(R.id.flashIconButton);
+        flashOnButton = (LinearLayout)findViewById(R.id.flashIconButton);
         final ImageView flashToggleIcon = (ImageView)findViewById(R.id.flashIcon);
         flashOnButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -167,6 +169,10 @@ public class MaterialBarcodeScannerActivity extends AppCompatActivity {
                 mCameraSource = null;
             }
         }
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onCameraParametersSet(Events.CameraParametersSetEvent event) {
+        flashOnButton.setVisibility(event.isFlashEnabled ? View.VISIBLE : View.GONE);
     }
 
     private void enableTorch() throws SecurityException{
