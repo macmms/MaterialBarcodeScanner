@@ -23,6 +23,8 @@ import com.google.android.gms.common.images.Size;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.Frame;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.io.IOException;
 import java.lang.Thread.State;
 import java.lang.annotation.Retention;
@@ -534,6 +536,15 @@ public class CameraSource {
     }
 
     /**
+     * Checks to see if the device has flash supported.
+     * @return
+     */
+    public boolean isFlashSupported() {
+        if (mCamera == null) return mFlashMode != null;
+        return mCamera.getParameters().getSupportedFlashModes() != null;
+    }
+
+    /**
      * Sets the flash mode.
      *
      * @param mode flash mode.
@@ -591,7 +602,7 @@ public class CameraSource {
      * This is the default focus mode on devices if they do not support <strong>FOCUS_MODE_CONTINUOUS_PICTURE</strong>
      *
      * However, there are some devices that only have <strong>FOCUS_MODE_FIXED</strong>, in that case we are not able to
-     * focus at all. The focus would be resolved internally by the camera. 
+     * focus at all. The focus would be resolved internally by the camera.
      */
     private void requestAutoFocus() {
         synchronized (mCameraLock) {
@@ -782,7 +793,7 @@ public class CameraSource {
         mFlashMode = parameters.getFlashMode();
 
         camera.setParameters(parameters);
-
+        EventBus.getDefault().post(new Events.CameraParametersSetEvent(isFlashSupported()));
         // Four frame buffers are needed for working with the camera:
         //
         //   one for the frame that is currently being executed upon in doing detection
