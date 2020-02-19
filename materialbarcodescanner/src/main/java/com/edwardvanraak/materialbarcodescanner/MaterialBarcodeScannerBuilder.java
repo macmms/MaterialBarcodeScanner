@@ -3,13 +3,12 @@ package com.edwardvanraak.materialbarcodescanner;
 import android.app.Activity;
 import android.graphics.Color;
 import android.hardware.Camera;
-import android.support.annotation.NonNull;
 import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
 
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
-
-import org.greenrobot.eventbus.EventBus;
 
 public class MaterialBarcodeScannerBuilder {
 
@@ -228,7 +227,7 @@ public class MaterialBarcodeScannerBuilder {
      * Build a barcode scanner using the Mobile Vision Barcode API
      */
     private void buildMobileVisionBarcodeDetector() {
-        String focusMode = Camera.Parameters.FOCUS_MODE_FIXED;
+        String focusMode = Camera.Parameters.FOCUS_MODE_AUTO;
         if(mAutoFocusEnabled){
             focusMode = Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE;
         }

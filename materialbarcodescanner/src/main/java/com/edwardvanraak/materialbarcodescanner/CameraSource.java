@@ -10,18 +10,21 @@ import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.os.Build;
 import android.os.SystemClock;
-import android.support.annotation.Nullable;
-import android.support.annotation.RequiresPermission;
-import android.support.annotation.StringDef;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresPermission;
+import androidx.annotation.StringDef;
+
 import com.google.android.gms.common.images.Size;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.Frame;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
 import java.lang.Thread.State;
@@ -310,7 +313,8 @@ public class CameraSource {
     /**
      * Opens the camera and starts sending preview frames to the underlying detector.  The preview
      * frames are not displayed.
-     *
+     * <br /><br />
+     * <em>Note: This method is only called when enabling/disabling flash.</em>
      * @throws IOException if the camera's preview texture or display could not be initialized
      */
     @RequiresPermission(Manifest.permission.CAMERA)
@@ -322,15 +326,8 @@ public class CameraSource {
 
             mCamera = createCamera();
 
-            // SurfaceTexture was introduced in Honeycomb (11), so if we are running and
-            // old version of Android. fall back to use SurfaceView.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                mDummySurfaceTexture = new SurfaceTexture(DUMMY_TEXTURE_NAME);
-                mCamera.setPreviewTexture(mDummySurfaceTexture);
-            } else {
-                mDummySurfaceView = new SurfaceView(mContext);
-                mCamera.setPreviewDisplay(mDummySurfaceView.getHolder());
-            }
+            mDummySurfaceTexture = new SurfaceTexture(DUMMY_TEXTURE_NAME);
+            mCamera.setPreviewTexture(mDummySurfaceTexture);
             mCamera.startPreview();
 
             mProcessingThread = new Thread(mFrameProcessor);
@@ -399,12 +396,8 @@ public class CameraSource {
                     // developer wants to display a preview we must use a SurfaceHolder.  If the developer doesn't
                     // want to display a preview we use a SurfaceTexture if we are running at least Honeycomb.
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                        mCamera.setPreviewTexture(null);
+                    mCamera.setPreviewTexture(null);
 
-                    } else {
-                        mCamera.setPreviewDisplay(null);
-                    }
                 } catch (Exception e) {
                     Log.e(TAG, "Failed to clear camera preview: " + e);
                 }
@@ -544,6 +537,15 @@ public class CameraSource {
     }
 
     /**
+     * Checks to see if the device has flash supported.
+     * @return
+     */
+    public boolean isFlashSupported() {
+        if (mCamera == null) return mFlashMode != null;
+        return mCamera.getParameters().getSupportedFlashModes() != null;
+    }
+
+    /**
      * Sets the flash mode.
      *
      * @param mode flash mode.
@@ -592,6 +594,23 @@ public class CameraSource {
                     autoFocusCallback.mDelegate = cb;
                 }
                 mCamera.autoFocus(autoFocusCallback);
+            }
+        }
+    }
+
+    /**
+     * Attempts to get the camera to focus if the {@link #getFocusMode()} is set to <strong>FOCUS_MODE_AUTO</strong>
+     * This is the default focus mode on devices if they do not support <strong>FOCUS_MODE_CONTINUOUS_PICTURE</strong>
+     *
+     * However, there are some devices that only have <strong>FOCUS_MODE_FIXED</strong>, in that case we are not able to
+     * focus at all. The focus would be resolved internally by the camera.
+     */
+    private void requestAutoFocus() {
+        synchronized (mCameraLock) {
+            if (getFocusMode() != null) {
+                if (getFocusMode().equals(Camera.Parameters.FOCUS_MODE_AUTO)) {
+                    autoFocus(null);
+                }
             }
         }
     }
@@ -775,7 +794,7 @@ public class CameraSource {
         mFlashMode = parameters.getFlashMode();
 
         camera.setParameters(parameters);
-
+        EventBus.getDefault().post(new Events.CameraParametersSetEvent(isFlashSupported()));
         // Four frame buffers are needed for working with the camera:
         //
         //   one for the frame that is currently being executed upon in doing detection
@@ -1035,6 +1054,7 @@ public class CameraSource {
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
             mFrameProcessor.setNextFrame(data, camera);
+            requestAutoFocus();
         }
     }
 

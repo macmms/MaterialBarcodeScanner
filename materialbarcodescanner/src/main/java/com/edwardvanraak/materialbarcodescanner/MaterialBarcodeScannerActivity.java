@@ -3,13 +3,15 @@ package com.edwardvanraak.materialbarcodescanner;
 import android.app.Dialog;
 import android.hardware.Camera;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -23,7 +25,6 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.IOException;
 
-import static junit.framework.Assert.assertNotNull;
 
 public class MaterialBarcodeScannerActivity extends AppCompatActivity {
 
@@ -49,10 +50,13 @@ public class MaterialBarcodeScannerActivity extends AppCompatActivity {
 
     private boolean mFlashOn = false;
 
+    private LinearLayout flashOnButton;
+
     @Override
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         if(getWindow() != null){
+            requestWindowFeature(Window.FEATURE_NO_TITLE);
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         }else{
             Log.e(TAG, "Barcode scanner could not go into fullscreen mode!");
@@ -71,7 +75,6 @@ public class MaterialBarcodeScannerActivity extends AppCompatActivity {
 
     private void setupLayout() {
         final TextView topTextView = (TextView) findViewById(R.id.topText);
-        assertNotNull(topTextView);
         String topText = mMaterialBarcodeScannerBuilder.getText();
         if(!mMaterialBarcodeScannerBuilder.getText().equals("")){
             topTextView.setText(topText);
@@ -101,9 +104,8 @@ public class MaterialBarcodeScannerActivity extends AppCompatActivity {
     }
 
     private void setupButtons() {
-        final LinearLayout flashOnButton = (LinearLayout)findViewById(R.id.flashIconButton);
+        flashOnButton = (LinearLayout)findViewById(R.id.flashIconButton);
         final ImageView flashToggleIcon = (ImageView)findViewById(R.id.flashIcon);
-        assertNotNull(flashOnButton);
         flashOnButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -170,6 +172,10 @@ public class MaterialBarcodeScannerActivity extends AppCompatActivity {
                 mCameraSource = null;
             }
         }
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onCameraParametersSet(Events.CameraParametersSetEvent event) {
+        flashOnButton.setVisibility(event.isFlashEnabled ? View.VISIBLE : View.GONE);
     }
 
     private void enableTorch() throws SecurityException{
