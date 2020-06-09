@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -91,10 +92,13 @@ public class MaterialBarcodeScanner {
                 ActivityCompat.requestPermissions(mMaterialBarcodeScannerBuilder.getActivity(), mPermissions, RC_HANDLE_CAMERA_PERM);
             }
         };
-        Snackbar.make(mMaterialBarcodeScannerBuilder.mRootView, R.string.permission_camera_rationale,
+        Snackbar snackbar = Snackbar.make(mMaterialBarcodeScannerBuilder.mRootView, R.string.permission_camera_rationale,
                 Snackbar.LENGTH_INDEFINITE)
-                .setAction(android.R.string.ok, listener)
-                .show();
+                .setAction(android.R.string.ok, listener);
+
+        TextView snackMessage = snackbar.getView().findViewById(com.google.android.material.R.id.snackbar_text);
+        snackMessage.setMaxLines(R.integer.snackbar_message_lines);
+        snackbar.show();
     }
 
     public MaterialBarcodeScannerBuilder getMaterialBarcodeScannerBuilder() {
