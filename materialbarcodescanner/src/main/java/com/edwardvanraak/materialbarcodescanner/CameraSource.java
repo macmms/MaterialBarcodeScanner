@@ -1086,11 +1086,14 @@ public class CameraSource {
 
         /**
          * Releases the underlying receiver.  This is only safe to do after the associated thread
-         * has completed, which is managed in camera source's release method above.
+         * has completed, which is managed in camera source's release method above. Only release
+         * if the detector has not already been set to null.
          */
         void release() {
-            mDetector.release();
-            mDetector = null;
+            if (mDetector != null) {
+                mDetector.release();x`
+                mDetector = null;
+            }
         }
 
         /**
