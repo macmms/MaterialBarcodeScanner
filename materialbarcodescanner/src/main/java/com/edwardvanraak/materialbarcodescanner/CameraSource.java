@@ -1091,7 +1091,7 @@ public class CameraSource {
          */
         void release() {
             if (mDetector != null) {
-                mDetector.release();x`
+                mDetector.release();
                 mDetector = null;
             }
         }
